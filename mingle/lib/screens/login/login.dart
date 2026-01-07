@@ -87,7 +87,7 @@ class _LoginState extends State<Login> {
                         key: Key('goToMainPage'),
                         text: "Login",
                         onPressed: () async {
-                          Get.to(ExplorePage());
+                          Get.to(NavBar());
                           // final loader = LoadingOverlay();
                           // loader.show(context);
                           // try {

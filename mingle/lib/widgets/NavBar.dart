@@ -19,8 +19,8 @@ class _NavBarState extends State<NavBar> {
   Map<String, dynamic> profile = Map();
 
   List<Widget> _pages = [
-          ExplorePage(),
-        ];
+    ExplorePage(),
+  ];
 
   // @override
   // void initState() {
