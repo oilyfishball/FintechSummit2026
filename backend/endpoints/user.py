@@ -35,7 +35,7 @@ async def registerRequest(request: Request):
         )
     if error:
         return format_error_msg(error)
-    res = await signup(name, email, photo, description, dates, password,
+    res = register(name, email, photo, description, dates, password,
                 public_key, private_key)
     return res
 
@@ -58,97 +58,29 @@ def register(name, email, photo, description, dates, password,
         return format_success_msg({"access": True})
     else:
         return format_error_msg("Username exists in a collection, Please try a different one")
-    
-def generate_random_string(num):
-    characters = string.ascii_letters + string.digits
-    salt = ''.join(random.choices(characters, k=num))
-    return salt
 
-def generate_otp(num): 
-    characters = string.digits
-    salt = ''.join(random.choices(characters, k=num))
-    return salt
-
-def hash_pw(pw: str) -> str:
-    sha256_hash = hashlib.sha256()
-    sha256_hash.update(pw.encode('utf-8'))
-    return sha256_hash.hexdigest()
-
-@router.post("/check-username")
-async def checkUsername(request: Request):
-    username, error = await read_json(request, ["username"])
+@router.post("/getProfile")
+async def registerRequest(request: Request):
+    email, error = await read_json(request, 
+        [
+        "email"
+        ]
+        )
     if error:
         return format_error_msg(error)
+    res = getProfile(email)
+                
+    return res
 
+def getProfile(email):
+    res = find_one_collection({"email": email}, "users")
 
-    user = find_one_collection({"username": username}, "authentication")
-    user2 = find_one_collection({"username": username}, "users")
-    return {"exists": bool(user) or bool(user2)}
-    
-@router.post("/forgetPassword")
-async def forgotPassword(request: Request):
-    username, email, error = await read_json(request, ["username", "email" ])
-    if error:
-        return format_error_msg(error)
-    try:
+    if res != None:
+        print(res)
+        return format_success_msg({"profile": res})
+    else:
+        return format_error_msg("No user found with this email")
 
-        # Error handling for no username / no email
-        user_auth = find_one_collection({"username": username}, "authentication")
-        if user_auth == None:
-            return format_error_msg("No Username Found")
-
-        user = find_one_collection({"username": username, "email": email}, "users")
-        if user == None:
-            return format_error_msg("Wrong Email Entered")
-        
-        otp = generate_otp(6)
-        update_to_collection({"username": username}, {"forgotPasswordOTP": False, "otp": otp}, "authentication")
-        send_otp_email(email, otp, username)
-        return format_success_msg({"forgotPassword": True})
-
-    except Exception as e:
-        return format_error_msg(str(e))
-
-@router.post("/forgetPasswordOTP")
-async def forgotPasswordOTP(request: Request):
-    username, otp, error = await read_json(request, ["username", "otp" ])
-    if error:
-        return format_error_msg(error)
-    try:
-        # Error handling for no username / no email
-        user_auth = find_one_collection({"username": username}, "authentication")
-        if user_auth == None:
-            return format_error_msg("No Username Found")
-        
-        if (user_auth["otp"] == otp):
-            update_to_collection({"username": username}, {"forgotPasswordOTP": True, "otp": ""}, "authentication")
-            return format_success_msg({"forgotPassword": True})
-        else:
-            return format_error_msg("OTP is wrong")
-
-    except Exception as e:
-        return format_error_msg(str(e))
-
-@router.post("/forgetPasswordChangePW")
-async def forgotPassword(request: Request):
-    username, password, error = await read_json(request, ["username", "password" ])
-    if error:
-        return format_error_msg(error)
-    try:
-        # Error handling for no username / no email
-        user_auth = find_one_collection({"username": username}, "authentication")
-        if user_auth == None:
-            return format_error_msg("No Username Found")
-        if (user_auth["forgotPasswordOTP"] == True):
-            salt = user_auth["salt"]
-            hashPw = hash_pw(password + salt)
-            update_to_collection({"username": username}, {"password": hashPw, "forgotPasswordOTP": ""}, "authentication")
-            return format_success_msg({"forgotPassword": True})
-        else:
-            return format_error_msg("No request is given")
-
-    except Exception as e:
-        return format_error_msg(str(e))
-
-# register("1", "2", "3", "4", "5", "6", "7", "8")
+register("1", "2", "3", "4", "5", "6", "7", "8")
 login("1", "6")
+getProfile("2")
