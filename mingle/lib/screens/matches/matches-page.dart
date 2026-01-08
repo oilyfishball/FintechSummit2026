@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mingle/components/mingle-title.dart';
 import 'package:mingle/screens/matches/matches-chat.dart';
-import 'package:mingle/styles/Colors.dart';
+import 'package:mingle/styles/colors.dart';
 
 /// =======================
 /// Match Preview Model

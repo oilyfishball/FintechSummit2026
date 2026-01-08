@@ -15,7 +15,7 @@ async def loginRequest(request: Request):
     if error:
         return format_error_msg(error)
     
-    return getAuth(email, password)
+    return login(email, password)
 
 def login(email, password):
     res = find_one_collection({"email": email, "password": password}, "restaurants")
@@ -75,6 +75,11 @@ def getProfile(email):
     else:
         return format_error_msg("No user found with this email")
 
+<<<<<<< HEAD
+# register("1", "name", "photo", "description", [1,2,3], [1,2,3], "6")
+# login("1", "6")
+# getProfile("2")
+=======
 @router.post("/getDates")
 async def getDates(request: Request):
     email, error = await read_json(request, 
@@ -101,3 +106,4 @@ print(register("restaurant@123", "restaurant", "key", "photo", "description", [1
 print(login("restaurant@123", "6"))
 print(getProfile("restaurant@123"))
 print(getDates("restaurant@123"))
+>>>>>>> main
