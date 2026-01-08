@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:mingle/styles/Colors.dart';
+import 'package:mingle/styles/colors.dart';
 import 'package:mingle/styles/widget-styles.dart';
 import 'package:intl/intl.dart';
 

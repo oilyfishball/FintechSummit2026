@@ -1,10 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mingle/components/mingle-title.dart';
-import 'package:mingle/components/mingle-overlay.dart';
-import 'package:mingle/screens/explore/explore-page.dart';
-import 'package:mingle/screens/login/register.dart';
 import 'package:mingle/screens/login/register.dart';
 import 'package:mingle/styles/login-register-bg.dart';
 import 'package:mingle/styles/widget-styles.dart';
@@ -13,7 +11,7 @@ import 'package:mingle/widgets/NavBar-user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../components/mingle-button.dart';
 import '../../../styles/colors.dart';
-import 'package:mingle/components/dialogs.dart' show showErrorAlertDialog;
+import 'package:mingle/services/auth_service.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -25,16 +23,48 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   // Get a reference your Supabase client
   // final supabase = Supabase.instance.client;
+
   bool passwordVisible = false;
-  TextEditingController email = TextEditingController(text: "123@gmail.com");
-  TextEditingController password = TextEditingController(text: "123456");
+  late TextEditingController email;
+  late TextEditingController password;
+  bool isLoading = false;
+  List<bool> selectedRole = [true, false]; // default: User
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers without default text
+    email = TextEditingController();
+    password = TextEditingController();
+    loadSavedRole();
+  }
+
+  // NEW: selection state, 0 = User, 1 = Restaurant
+  bool isUser = true; // default: User
+
+  Future<void> loadSavedRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString("role");
+
+    if (role != null) {
+      setState(() {
+        isUser = role == "user";
+      });
+    }
+  }
+
+  // Save role to SharedPreferences
+  Future<void> saveRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("role", isUser ? "user" : "restaurant");
+  }
 
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      resizeToAvoidBottomInset : false, // Fix for bottom overflow by blank pixels error
+      resizeToAvoidBottomInset: false,
       body: SingleChildScrollView(
         child: LoginRegisterBg(
           child: Column(
@@ -46,27 +76,63 @@ class _LoginState extends State<Login> {
                 "Join the Community.",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
               ),
-              Text(
-                "Fashionable and professional pre-loved",
-                style: TextStyle(fontSize: 14),
-              ),
               SizedBox(height: height * 0.1),
+              
+              /// Role Selection (User / Restaurant)
+              Text("Login as:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              SizedBox(height: 8),
+              ToggleButtons(
+                borderRadius: BorderRadius.circular(12),
+                selectedColor: Colors.white,
+                fillColor: secondary,
+                color: black,
+                isSelected: selectedRole,
+                onPressed: (int index) {
+                  setState(() {
+                    for (int i = 0; i < selectedRole.length; i++) {
+                      selectedRole[i] = i == index;
+                    }
+                  });
+                },
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text("User"),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text("Restaurant"),
+                  ),
+                ],
+              ),
+              SizedBox(height: height * 0.05),
+              
               TextFormField(
                 autofillHints: [AutofillHints.email],
                 controller: email,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                enableInteractiveSelection: true,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9@._-]')),
+                ],
                 decoration: textFieldDeco.copyWith(hintText: "Email"),
               ),
               SizedBox(height: height * 0.033),
               TextFormField(
                 obscureText: !passwordVisible,
                 controller: password,
+                textInputAction: TextInputAction.done,
+                enableInteractiveSelection: true,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'[\n\r]')),
+                ],
                 decoration: textFieldDeco.copyWith(
                   hintText: "Password",
                   suffixIcon: IconButton(
-                    icon:
-                        passwordVisible
-                            ? Icon(Icons.visibility)
-                            : Icon(Icons.visibility_off),
+                    icon: passwordVisible
+                        ? Icon(Icons.visibility)
+                        : Icon(Icons.visibility_off),
                     color: passwordVisible ? secondary : grey,
                     splashColor: Colors.transparent,
                     onPressed: () {
@@ -77,6 +143,35 @@ class _LoginState extends State<Login> {
                   ),
                 ),
               ),
+
+              SizedBox(height: height * 0.033),
+
+              // //select user/restaurant role
+              // ToggleButtons(
+              //   borderRadius: BorderRadius.circular(12),
+              //   selectedColor: Colors.white,
+              //   fillColor: secondary,
+              //   color: black,
+              //   isSelected: [isUser, !isUser],
+              //   onPressed: (int index) async {
+              //     setState(() {
+              //       isUser = index == 0; // 0 = User, 1 = Restaurant
+              //     });
+              //     await saveRole(); // save immediately
+              //   },
+              //   children: const [
+              //     Padding(
+              //       padding: EdgeInsets.symmetric(horizontal: 16),
+              //       child: Text("User"),
+              //     ),
+              //     Padding(
+              //       padding: EdgeInsets.symmetric(horizontal: 16),
+              //       child: Text("Restaurant"),
+              //     ),
+              //   ],
+              // ),
+
+
               Padding(
                 padding: EdgeInsets.symmetric(
                   vertical: height * 0.033,
@@ -87,32 +182,11 @@ class _LoginState extends State<Login> {
                     Expanded(
                       child: mingleButton(
                         key: Key('goToMainPage'),
-                        text: "Login",
-                        onPressed: () async {
-                          SharedPreferences prefs = await SharedPreferences.getInstance();
-                          String? role = prefs.getString("role");
-                          
-                          if (role == null) {
-                            // fallback if role not saved
-                            Get.snackbar(
-                              "Error",
-                              "Role not found. Please complete registration first.",
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                            return;
-                          }
+                        text: isLoading ? "Loading..." : "Login",                        
+                        onPressed: isLoading ? null : () async {
+                          await saveRole();
+                          handleLogin();
 
-                          if (role == "user") {
-                            Get.offAll(() => NavBarUser());
-                          } else if (role == "restaurant") {
-                            Get.offAll(() => NavBarRestaurant());
-                          } else {
-                            Get.snackbar(
-                              "Error",
-                              "Unknown role",
-                              snackPosition: SnackPosition.BOTTOM,
-                            );
-                          }
                           // final loader = LoadingOverlay();
                           // loader.show(context);
                           // try {
@@ -137,7 +211,7 @@ class _LoginState extends State<Login> {
                   ],
                 ),
               ),
-              SizedBox(height: height * 0.18),
+              SizedBox(height: height * 0.10),
               RichText(
                 text: TextSpan(
                   style: const TextStyle(color: Colors.black, fontSize: 16),
@@ -149,30 +223,91 @@ class _LoginState extends State<Login> {
                         color: secondary,
                         fontWeight: FontWeight.bold,
                       ),
-                      recognizer:
-                          TapGestureRecognizer()
-                            ..onTap = () {
-                              Get.to(() => Register(), transition: pageTransitionStyle);
-                            },
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Get.to(() => Register(),
+                              transition: pageTransitionStyle);
+                        },
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 17),
-              // GestureDetector(
-              //   onTap: () {
-              //     Get.to(() => ForgetPassword(), transition: pageTransitionStyle);
-              //   },
-              //   child: Text(
-              //     "Forgot your password?",
-              //     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              //   ),
-              // ),
-              // SizedBox(height: 32),
             ],
           ),
         ),
-      )
+      ),
     );
+  }
+
+  Future<void> handleLogin() async {
+    try {
+      // Validate inputs
+      if (email.text.isEmpty || password.text.isEmpty) {
+        Get.snackbar(
+          "Error",
+          "Please fill in all fields",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      // Show loading state
+      setState(() {
+        isLoading = true;
+      });
+
+      // Get selected role
+      String selectedLoginRole = isUser ? "user" : "restaurant";
+
+      // Call different API based on role
+      final result = isUser
+          ? await AuthService().loginUser(email.text, password.text)
+          : await AuthService().loginRestaurant(email.text, password.text);
+
+      if (result['success']) {
+        // Save the selected role to SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('role', selectedLoginRole);
+
+        // Navigate based on selected role
+        if (selectedLoginRole == "user") {
+          Get.offAll(() => NavBarUser());
+        } else if (selectedLoginRole == "restaurant") {
+          Get.offAll(() => NavBarRestaurant());
+        } else {
+          Get.snackbar(
+            "Error",
+            "Unknown role: $selectedLoginRole",
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      } else {
+        // Show error message from API
+        Get.snackbar(
+          "Error",
+          result['message'] ?? "Login failed",
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        "Error",
+        "Login failed: ${e.toString()}",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      // Hide loading state
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    email.dispose();
+    password.dispose();
+    super.dispose();
   }
 }
