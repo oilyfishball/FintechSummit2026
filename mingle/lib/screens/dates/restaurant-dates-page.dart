@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mingle/components/mingle-title.dart';
 import 'package:mingle/screens/dates/restaurant-dates-card.dart';
 
 class RestaurantDatePage extends StatelessWidget {
@@ -10,8 +11,8 @@ class RestaurantDatePage extends StatelessWidget {
     {
       "a": {
         "id": "user_001",
-        "name": "Alex",
-        "photo": "https://randomuser.me/api/portraits/men/32.jpg",
+        "name": "Ryan",
+        "photo": "https://i.pravatar.cc/150?img=12",
       },
       "b": {
         "id": "user_002",
@@ -21,29 +22,29 @@ class RestaurantDatePage extends StatelessWidget {
       "dateTime": "2026-01-07T18:30:00",
       "matchId": "match_001",
     },
-     {
+    {
       "a": {
         "id": "user_003",
-        "name": "Charlie",
-        "photo": "https://randomuser.me/api/portraits/men/32.jpg",
+        "name": "Ethan",
+        "photo": "https://i.pravatar.cc/150?img=3",
       },
       "b": {
         "id": "user_004",
-        "name": "Dawn",
+        "name": "Jamie",
         "photo": "https://randomuser.me/api/portraits/women/44.jpg",
       },
       "dateTime": "2026-01-07T18:30:00",
       "matchId": "match_001",
     },
-     {
+    {
       "a": {
         "id": "user_005",
-        "name": "Ele",
-        "photo": "https://randomuser.me/api/portraits/men/32.jpg",
+        "name": "Daniel",
+        "photo": "https://i.pravatar.cc/150?img=8",
       },
       "b": {
         "id": "user_006",
-        "name": "Faith",
+        "name": "Jamie",
         "photo": "https://randomuser.me/api/portraits/women/44.jpg",
       },
       "dateTime": "2026-01-07T18:30:00",
@@ -53,12 +54,27 @@ class RestaurantDatePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: matches.length,
-      itemBuilder: (context, index) {
-        return RestaurantDateCard(match: matches[index]);
-      },
+    return Scaffold(
+      // App bar at the top
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: mingleTitle(size: 30),
+      ),
+
+      // Body of the page
+      body: SafeArea(
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: matches.length,
+          itemBuilder: (context, index) {
+            return RestaurantDateCard(match: matches[index]);
+          },
+        ),
+      ),
     );
   }
+
 }

@@ -1,14 +1,18 @@
 import 'package:dotted_border/dotted_border.dart' show BorderType, DottedBorder;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 // import 'package:mingle/backend-client.dart';
 import 'package:mingle/components/mingle-button.dart';
 import 'package:mingle/components/mingle-overlay.dart' show LoadingOverlay;
 import 'package:mingle/components/mingle-title.dart';
+import 'package:mingle/widgets/NavBar-restaurant.dart';
 import 'package:mingle/widgets/NavBar-user.dart';
 import 'package:mingle/styles/colors.dart';
 import 'package:mingle/styles/login-register-bg.dart';
 import 'package:mingle/styles/widget-styles.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 // import 'package:image-picker/image-picker.dart';
 import 'package:path/path.dart' as path;
 import 'package:mingle/components/dialogs.dart' show showErrorAlertDialog;
@@ -40,6 +44,35 @@ class _RegisterUploadDPState extends State<RegisterUploadDP> {
   // final ImagePicker picker = ImagePicker();
   // final supabase = Supabase.instance.client;
   File? file;
+
+    // NEW: selection state, 0 = User, 1 = Restaurant
+  List<bool> selectedRole = [true, false]; // default: User
+
+  // Helper to save role locally
+  Future<void> saveRole() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String role = selectedRole[0] ? "user" : "restaurant";
+    await prefs.setString("role", role);
+    print("Saved role: $role"); // optional debug
+  }
+
+  // Helper to read role (can be used elsewhere in login/main page)
+  Future<String?> getRole() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString("role");
+  }
+
+  // Image picker
+  final ImagePicker picker = ImagePicker();
+
+  Future<void> pickImage() async {
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        file = File(image.path);
+      });
+    }
+  }
 
   // Future<File?> pickImage() async {
   //   final XFile? image = await picker.pickImage(source: ImageSource.gallery);
@@ -141,67 +174,100 @@ class _RegisterUploadDPState extends State<RegisterUploadDP> {
               "Personalise Your Account",
               style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
             ),
+
             SizedBox(height: height * 0.045),
-            file == null
-                ? GestureDetector(
-                  onTap: () async {
-                    // File? tFile = await pickImage();
-                    // setState(() {
-                    //   file = tFile;
-                    // });
-                  },
-                  child: DottedBorder(
-                    borderType: BorderType.Circle,
-                    color: secondary,
-                    dashPattern: [6, 3], // 6px dash, 3px gap
-                    strokeWidth: 2,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_photo_alternate_rounded,
-                            size: 40,
-                            color: Colors.black,
-                          ),
-                          Text(
-                            "Upload Profile Photo",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+            
+           /// Profile Picture upload
+            GestureDetector(
+              onTap: pickImage,
+              child: file == null
+                  ? DottedBorder(
+                      borderType: BorderType.Circle,
+                      color: secondary,
+                      dashPattern: [6, 3],
+                      strokeWidth: 2,
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate_rounded,
+                              size: 40,
+                              color: Colors.black,
                             ),
-                          ),
-                        ],
+                            Text(
+                              "Upload Profile Photo",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ClipOval(
+                      child: Image.file(
+                        file!,
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-                )
-                : ClipOval(
-                  child: Image.file(
-                    file!,
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+            ),
+
             SizedBox(height: height * 0.03),
+
+            /// Description box
             Form(
               key: _formKey,
               child: TextFormField(
                 controller: userName,
-                decoration: textFieldDeco.copyWith(hintText: "Username"),
-                validator: (value) => FormValidator.isEmpty(value, "username"),
+                decoration: textFieldDeco.copyWith(hintText: "Description"),
+                validator: (value) => FormValidator.isEmpty(value, "description!"),
               ),
             ),
+
             SizedBox(height: height * 0.015),
+            
+            /// Role Selection (Restaurant / User)
+            /// Role selection
+            Text("Select Account Type:", style: TextStyle(fontSize: 16)),
+            SizedBox(height: 8),
+            ToggleButtons(
+              borderRadius: BorderRadius.circular(12),
+              selectedColor: Colors.white,
+              fillColor: secondary,
+              color: black,
+              isSelected: selectedRole,
+              onPressed: (int index) {
+                setState(() {
+                  for (int i = 0; i < selectedRole.length; i++) {
+                    selectedRole[i] = i == index;
+                  }
+                });
+              },
+              children: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text("User"),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text("Restaurant"),
+                ),
+              ],
+            ),
+
+            /// Confirm Button
             Padding(
               padding: EdgeInsets.symmetric(
                 vertical: height * 0.033,
@@ -222,6 +288,17 @@ class _RegisterUploadDPState extends State<RegisterUploadDP> {
                           );
                         } else if (_formKey.currentState!.validate()) {
                           // signup_2();
+                        // Save role locally
+                          await saveRole();
+
+                          // TODO: call signup function here if needed
+                          // Navigate to correct page based on role
+                          String role = selectedRole[0] ? "user" : "restaurant";
+                          if (role == "user") {
+                            Get.offAll(() => NavBarUser());
+                          } else {
+                            Get.offAll(() => NavBarRestaurant());
+                          }
                         }
                       },
                     ),

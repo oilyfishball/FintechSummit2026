@@ -10,6 +10,7 @@ import 'package:mingle/styles/login-register-bg.dart';
 import 'package:mingle/styles/widget-styles.dart';
 import 'package:mingle/widgets/NavBar-restaurant.dart';
 import 'package:mingle/widgets/NavBar-user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../components/mingle-button.dart';
 import '../../../styles/colors.dart';
 import 'package:mingle/components/dialogs.dart' show showErrorAlertDialog;
@@ -88,7 +89,30 @@ class _LoginState extends State<Login> {
                         key: Key('goToMainPage'),
                         text: "Login",
                         onPressed: () async {
-                          Get.to(NavBarUser());
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          String? role = prefs.getString("role");
+                          
+                          if (role == null) {
+                            // fallback if role not saved
+                            Get.snackbar(
+                              "Error",
+                              "Role not found. Please complete registration first.",
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                            return;
+                          }
+
+                          if (role == "user") {
+                            Get.offAll(() => NavBarUser());
+                          } else if (role == "restaurant") {
+                            Get.offAll(() => NavBarRestaurant());
+                          } else {
+                            Get.snackbar(
+                              "Error",
+                              "Unknown role",
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          }
                           // final loader = LoadingOverlay();
                           // loader.show(context);
                           // try {
