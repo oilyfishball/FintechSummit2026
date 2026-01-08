@@ -209,8 +209,8 @@ class _RegisterUploadDPState extends State<RegisterUploadDP> {
               key: _formKey,
               child: TextFormField(
                 controller: userName,
-                decoration: textFieldDeco.copyWith(hintText: "Username"),
-                validator: (value) => FormValidator.isEmpty(value, "username"),
+                decoration: textFieldDeco.copyWith(hintText: "Description about yourself"),
+                validator: (value) => FormValidator.isEmpty(value, "description"),
               ),
             ),
             SizedBox(height: height * 0.015),
@@ -253,7 +253,7 @@ class _RegisterUploadDPState extends State<RegisterUploadDP> {
                   Expanded(
                     child: mingleButton(
                       text: isLoading ? "Registering..." : "Sign Up",
-                      onPressed: isLoading ? null : () {
+                      onPressed: isLoading ? null : () async {
                         handleSignUp();
                         if (file == null) {
                           Get.snackbar(
