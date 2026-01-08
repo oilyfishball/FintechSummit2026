@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mingle/styles/login-register-bg.dart';
+import 'package:mingle/components/mingle-title.dart';
 import 'package:mingle/styles/colors.dart';
 
 class RestaurantProfilePage extends StatelessWidget {
@@ -7,7 +8,7 @@ class RestaurantProfilePage extends StatelessWidget {
 
   //Replace with getProfile or sth
   final Map<String, String> restaurantProfile = {
-    "name": "Golden Spoon",
+    "name": "The Fancy Fork",
     "description": "A cozy place serving modern fusion cuisine.",
     "image": "https://icon-library.com/images/restaurant-icon-png/restaurant-icon-png-15.jpg",
   };
@@ -15,6 +16,13 @@ class RestaurantProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: mingleTitle(size: 30),
+      ),
       body: LoginRegisterBg(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

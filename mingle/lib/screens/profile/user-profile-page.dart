@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mingle/styles/login-register-bg.dart';
+import 'package:mingle/components/mingle-title.dart';
 import 'package:mingle/styles/colors.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -11,9 +12,9 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> {
   Map<String, String> profile = {
-    "name": "Dummy User",
+    "name": "Jamie",
     "description": "Fashion enthusiast who loves sustainable style.",
-    "image": "https://randomuser.me/api/portraits/women/65.jpg",
+    "image": "https://randomuser.me/api/portraits/women/44.jpg",
     "xrp balance": "10",
   };
 
@@ -26,6 +27,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: mingleTitle(size: 30),
+      ),
       body: LoginRegisterBg(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

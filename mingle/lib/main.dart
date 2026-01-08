@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: secondary),
         scaffoldBackgroundColor: primary,
       ),
-      home: NavBarUser(),
+      home: Login(),
     );
     
   }

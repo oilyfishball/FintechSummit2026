@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mingle/styles/login-register-bg.dart';
 import 'package:mingle/components/mingle-button.dart';
+import 'package:mingle/components/mingle-title.dart';
 import 'package:mingle/styles/colors.dart';
+import 'package:mingle/styles/login-register-bg.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -18,17 +19,17 @@ class _ExplorePageState extends State<ExplorePage> {
     {
       "name": "Alex Tan",
       "description": "Fashion enthusiast who loves sustainable style.",
-      "image": "https://icon-library.com/images/profile-icon/profile-icon-14.jpg",
+      "image": "https://randomuser.me/api/portraits/men/32.jpg",
     },
     {
       "name": "Jamie Lim",
       "description": "Minimalist. Coffee addict. Thrift lover.",
-      "image": "https://icon-library.com/images/profile-icon/profile-icon-14.jpg",
+      "image": "https://randomuser.me/api/portraits/women/65.jpg",
     },
     {
       "name": "Chris Wong",
       "description": "Streetwear collector & reseller.",
-      "image": "https://icon-library.com/images/profile-icon/profile-icon-14.jpg",
+      "image": "https://randomuser.me/api/portraits/men/65.jpg",
     },
   ];
 
@@ -43,6 +44,13 @@ class _ExplorePageState extends State<ExplorePage> {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: mingleTitle(size: 30),
+      ),
       body: LoginRegisterBg(
         child:Column(
           mainAxisAlignment: MainAxisAlignment.center,
