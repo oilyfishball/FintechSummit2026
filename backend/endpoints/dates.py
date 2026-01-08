@@ -22,4 +22,19 @@ def createDate(dummy):
     date = add_to_collection(date_jsn, "dates")
     return format_success_msg({"access": True})
 
+@router.post("/getDate")
+async def getDateRequest(request: Request):
+    dateID, error = await read_json(request, ["dateID"])
+    if error:
+        return format_error_msg(error)
+    return getDate(dateID)
+
+def getDate(dateID):
+    res = find_one_collection({"date_id": dateID}, "dates")
+    if res != None:
+        return format_success_msg({"date": res})
+    else:
+        return format_error_msg("No date found with this ID")
+
 print(createDate("test"))
+getDate("test")
