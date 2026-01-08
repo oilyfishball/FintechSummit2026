@@ -36,16 +36,11 @@ class _LoginState extends State<Login> {
     // Initialize controllers without default text
     email = TextEditingController();
     password = TextEditingController();
+    loadSavedRole();
   }
 
   // NEW: selection state, 0 = User, 1 = Restaurant
   bool isUser = true; // default: User
-
-  @override
-  void initState() {
-    super.initState();
-    loadSavedRole();
-  }
 
   Future<void> loadSavedRole() async {
     final prefs = await SharedPreferences.getInstance();
@@ -155,30 +150,30 @@ class _LoginState extends State<Login> {
 
               SizedBox(height: height * 0.033),
 
-              //select user/restaurant role
-              ToggleButtons(
-                borderRadius: BorderRadius.circular(12),
-                selectedColor: Colors.white,
-                fillColor: secondary,
-                color: black,
-                isSelected: [isUser, !isUser],
-                onPressed: (int index) async {
-                  setState(() {
-                    isUser = index == 0; // 0 = User, 1 = Restaurant
-                  });
-                  await saveRole(); // save immediately
-                },
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text("User"),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text("Restaurant"),
-                  ),
-                ],
-              ),
+              // //select user/restaurant role
+              // ToggleButtons(
+              //   borderRadius: BorderRadius.circular(12),
+              //   selectedColor: Colors.white,
+              //   fillColor: secondary,
+              //   color: black,
+              //   isSelected: [isUser, !isUser],
+              //   onPressed: (int index) async {
+              //     setState(() {
+              //       isUser = index == 0; // 0 = User, 1 = Restaurant
+              //     });
+              //     await saveRole(); // save immediately
+              //   },
+              //   children: const [
+              //     Padding(
+              //       padding: EdgeInsets.symmetric(horizontal: 16),
+              //       child: Text("User"),
+              //     ),
+              //     Padding(
+              //       padding: EdgeInsets.symmetric(horizontal: 16),
+              //       child: Text("Restaurant"),
+              //     ),
+              //   ],
+              // ),
 
 
               Padding(
@@ -193,14 +188,9 @@ class _LoginState extends State<Login> {
                         key: Key('goToMainPage'),
                         text: isLoading ? "Loading..." : "Login",                        
                         onPressed: isLoading ? null : () async {
-                          await saveRole(); // ensure role is saved
+                          await saveRole();
                           handleLogin();
 
-                          if (isUser) {
-                            Get.offAll(() => NavBarUser());
-                          } else {
-                            Get.offAll(() => NavBarRestaurant());
-                          }
                           // final loader = LoadingOverlay();
                           // loader.show(context);
                           // try {
@@ -219,12 +209,13 @@ class _LoginState extends State<Login> {
                           // } finally {
                           //   loader.hide();
                           // }
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: height * 0.18),
+              SizedBox(height: height * 0.10),
               RichText(
                 text: TextSpan(
                   style: const TextStyle(color: Colors.black, fontSize: 16),
@@ -271,10 +262,10 @@ class _LoginState extends State<Login> {
       });
 
       // Get selected role
-      String selectedLoginRole = selectedRole[0] ? "user" : "restaurant";
+      String selectedLoginRole = isUser ? "user" : "restaurant";
 
       // Call different API based on role
-      final result = selectedLoginRole == "user"
+      final result = isUser
           ? await AuthService().loginUser(email.text, password.text)
           : await AuthService().loginRestaurant(email.text, password.text);
 
