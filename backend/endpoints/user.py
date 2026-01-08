@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request
-from database.database import find_one_collection, add_to_collection, update_to_collection, delete_from_collection
+from database.database import find_one_collection, add_to_collection, update_to_collection, delete_from_collection, init_pymongo, open_collection
 from misc.misc import read_json, format_error_msg, format_success_msg
+from pymongo import MongoClient
 import hashlib
 import random
 import string
@@ -14,7 +15,7 @@ async def loginRequest(request: Request):
     if error:
         return format_error_msg(error)
     
-    return getAuth(email, password)
+    return login(email, password)
 
 def login(email, password):
     res = find_one_collection({"email": email, "password": password}, "users")
@@ -45,6 +46,7 @@ def register(email, name, photo, description, dateIDs, matches, password):
                 "dateIDs": dateIDs,
                 "matches": matches,
                 "password": password,
+                "pendingMatches": [],
                 }
     
     res = find_one_collection({"email": email}, "users")
@@ -77,6 +79,107 @@ def getProfile(email):
     else:
         return format_error_msg("No user found with this email")
 
-register("1", "name", "photo", "description", [1,2,3], [1,2,3], "6")
-login("1", "6")
-getProfile("1")
+@router.post("/uploadSSID")
+async def uploadRequest(request: Request):
+    ssid, error = await read_json(request, ["ssid"])
+    if error:
+        return format_error_msg(error)
+    res = uploadSSID(ssid)
+    return res
+
+# TODO update this to the database
+# Returns True if ssid matches the database / the escrow
+# Else updates False
+def uploadSSID(ssid):
+    return False
+
+# @router.post("/getDates")
+# async def getDatesRequest(request: Request):
+#     email, error = await read_json(request, ["email"])
+#     if error:
+#         return format_error_msg(error)
+#     res = getDates(email)
+#     return res
+
+# # TODO format the date_object 
+# def getDates(email):
+#     res = find_one_collection({"email": email}, "users")
+#     if res == None:
+#         print("Not a valid user")
+#         return format_error_msg("Not a valid user")
+#     else:
+#         print(res)
+#         dateIds = res["dateIDs"]
+        
+#         for dateID in dateIds:
+#             date_object = find_one_collection({"date"})
+#             pass
+
+        # return format_success_msg()
+
+@router.get("/getRandomProfile")
+async def getRandomProfileRequest(request: Request):
+    res = getRandomProfile()
+    return res
+
+def getRandomProfile():
+    client = init_pymongo()
+    col = open_collection("users", client)
+    
+    # Get a random profile
+    random_doc = col.aggregate([
+        {'$sample': {'size': 1}}
+    ])
+
+    for doc in random_doc:
+        return doc
+
+
+
+@router.post("/acceptMatch")
+async def postSendInvitationRequest(request: Request):
+    emailUser, emailMatch, error = await read_json(request, 
+        ["emailUser", 
+         "emailMatch"])
+    if error:
+        return format_error_msg(error)
+    res = acceptMatch(emailUser, emailMatch)
+    return format_success_msg(res)
+
+def acceptMatch(emailUser, emailMatch):
+    userProfile = find_one_collection({"email": emailUser}, "users")
+    pendingMatches = userProfile["pendingMatches"]
+    for match in pendingMatches:
+        if match == emailMatch:
+            pendingMatches.remove(emailMatch)
+            update_to_collection({"email": emailUser}, {"pendingMatches": pendingMatches}, "users")
+            addToMatchedPeopleArrayA(emailUser, emailMatch)
+            addToMatchedPeopleArrayA(emailMatch, emailUser)
+            return {"access": True}
+    pendingMatches.add(emailMatch)
+    update_to_collection({"email": emailUser}, {"pendingMatches": pendingMatches}, "users")
+    return {"access": True}
+
+def addToMatchedPeopleArrayA(emailA, emailB):
+    aProfile = find_one_collection({"email": emailA}, "users")
+    matchedPeopleArrayA = aProfile["matches"]
+    matchedPeopleArrayA.add(emailB)
+    update_to_collection({"email": emailA}, {"matches": matchedPeopleArrayA}, "users")
+    
+
+# @router.post("/getPendingMatches")
+# async def getPendingMatchesRequest(request: Request):
+#     emailUser, error = await read_json(re)
+    
+
+# print("Register 1")
+# register("1", "2", "3", "4", "5", "6", "7")
+# print("Register 123")
+# register("123", "2", "3", "4", "5", "6", "7")
+# print("Accepting match")
+# acceptMatch("1", "123")
+# acceptMatch("123", "1")
+
+# login("1", "6")
+# getProfile("2")
+# getDates("1")
