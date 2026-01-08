@@ -66,14 +66,13 @@ async def registerRequest(request: Request):
     return res
 
 def getProfile(email):
-    res = find_one_collection({"email": email}, "users")
+    res = find_one_collection({"email": email}, "restaurants")
 
     if res != None:
-        print(res)
         return format_success_msg({"profile": res})
     else:
         return format_error_msg("No user found with this email")
 
 print(register("restaurant@123", "restaurant", "photo", "description", [1,2,3], "6"))
 print(login("restaurant@123", "6"))
-# getProfile("2")
+print(getProfile("restaurant@123"))
