@@ -14,7 +14,7 @@ async def loginRequest(request: Request):
     if error:
         return format_error_msg(error)
     
-    return getAuth(email, password)
+    return login(email, password)
 
 def login(email, password):
     res = find_one_collection({"email": email, "password": password}, "users")

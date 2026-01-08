@@ -15,7 +15,7 @@ async def loginRequest(request: Request):
     if error:
         return format_error_msg(error)
     
-    return getAuth(email, password)
+    return login(email, password)
 
 def login(email, password):
     res = find_one_collection({"email": email, "password": password}, "users")
@@ -46,6 +46,7 @@ def register(email, name, photo, description, dateIDs, matches, password):
                 "dateIDs": dateIDs,
                 "matches": matches,
                 "password": password,
+                "pendingMatches": [],
                 }
     
     res = find_one_collection({"email": email}, "users")
@@ -132,6 +133,25 @@ def getRandomProfile():
 
     for doc in random_doc:
         return doc
+
+
+
+@router.post("/acceptMatch")
+async def postSendInvitationRequest(request: Request):
+    emailUser, emailMatch, error = await read_json(request, 
+        ["emailUser", 
+         "emailMatch"])
+    if error:
+        return format_error_msg(error)
+    res = acceptMatch(emailUser, emailMatch)
+    return format_success_msg(res)
+
+def acceptMatch(emailUser, emailMatch):
+    userProfile = find_one_collection({"email": emailUser})
+    pendingMatches = userProfile["pendingMatches"]
+    pendingMatches.add(emailMatch)
+    update_to_collection({"email": emailUser}, {"pendingMatches": pendingMatches}, "users")
+    return {"access": True}
 
 
     
